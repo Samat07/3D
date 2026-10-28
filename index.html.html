@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Акылдуу коопсуздук системасы: жүз менен ачылган кулпу</title>
+<style>
+  :root{--bg:#060914;--line:#1f2b4a;--txt:#eaf0ff;--dim:#93a1c4;--acc:#38bdf8;--vio:#a78bfa;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif}
+  .bg{position:fixed;inset:0;overflow:hidden;pointer-events:none}
+  .bg i{position:absolute;border-radius:50%;filter:blur(90px);opacity:.45;animation:float 18s ease-in-out infinite alternate}
+  .bg i:nth-child(1){width:46vw;height:46vw;left:-10vw;top:-15vw;background:#0c4a8a}
+  .bg i:nth-child(2){width:40vw;height:40vw;right:-10vw;bottom:-14vw;background:#5b21b6;animation-delay:-6s}
+  .bg i:nth-child(3){width:26vw;height:26vw;left:40vw;top:30vh;background:#0e7490;opacity:.22;animation-delay:-11s}
+  @keyframes float{to{transform:translate(4vw,3vh) scale(1.12)}}
+  .bg::after{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(circle at 50% 40%,#000,transparent 75%)}
+  .slide{position:absolute;inset:0;padding:44px 6vw 64px;display:flex;flex-direction:column;justify-content:safe center;overflow:auto;opacity:0;pointer-events:none;transform:translateX(50px) scale(.985);transition:opacity .55s,transform .55s}
+  .slide.active{opacity:1;pointer-events:auto;transform:none}
+  .slide.prev{transform:translateX(-50px) scale(.985)}
+  .slide::-webkit-scrollbar{width:6px}.slide::-webkit-scrollbar-thumb{background:#1f2b4a;border-radius:9px}
+  .tag{display:inline-block;color:var(--acc);letter-spacing:.2em;font-size:.78rem;font-weight:700;margin-bottom:.7rem}
+  .tag::before{content:"";display:inline-block;width:28px;height:2px;background:var(--acc);vertical-align:middle;margin-right:10px}
+  h1{font-size:clamp(2.1rem,4.6vw,3.8rem);line-height:1.07;background:linear-gradient(90deg,#fff,var(--acc) 60%,var(--vio));-webkit-background-clip:text;background-clip:text;color:transparent}
+  h2{font-size:clamp(1.5rem,2.9vw,2.4rem);margin-bottom:1rem}
+  h3{font-size:1.02rem;margin-bottom:.35rem}
+  p,li{color:var(--dim);line-height:1.55;font-size:.95rem}
+  .sub{font-size:1.1rem;margin-top:1rem;max-width:36ch}
+  .lead{margin-bottom:1rem;max-width:80ch}
+  .row{display:flex;gap:1.6rem;align-items:flex-start;width:100%}
+  .row>*{min-width:0}.f1{flex:1}.f2{flex:2}
+  .grid{display:grid;gap:.9rem}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  .card{background:linear-gradient(160deg,#ffffff0d,#ffffff04);border:1px solid var(--line);border-radius:16px;padding:1rem 1.1rem;backdrop-filter:blur(8px);transition:.25s}
+  .card:hover{border-color:var(--acc);transform:translateY(-3px);box-shadow:0 10px 30px #38bdf822}
+  .card .ic{font-size:1.7rem;margin-bottom:.25rem}
+  .big{font-size:2.1rem;font-weight:800;background:linear-gradient(90deg,var(--acc),var(--vio));-webkit-background-clip:text;background-clip:text;color:transparent}
+  ul{list-style:none}li::before{content:"▸ ";color:var(--acc)}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  td,th{padding:.45rem .65rem;border-bottom:1px solid var(--line);text-align:left;color:var(--txt)}
+  th{color:var(--dim);font-size:.7rem;letter-spacing:.1em}
+  tr.me td{color:var(--ok);font-weight:700;background:#22c55e12}
+  td:last-child{color:var(--dim)}tr.me td:last-child{color:var(--ok)}
+  .chips{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.2rem}
+  .chip{padding:.4rem .9rem;border-radius:99px;border:1px solid var(--line);background:#ffffff0a;font-size:.85rem;color:var(--txt)}
+  .stage{position:relative;width:100%;height:58vh;min-height:320px;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#050810;box-shadow:0 0 60px #38bdf81a inset,0 20px 60px #0008}
+  .stage canvas{display:block;width:100%;height:100%;cursor:grab}
+  .hud{position:absolute;left:14px;top:12px;font-size:.72rem;color:var(--dim);letter-spacing:.12em;z-index:2;pointer-events:none}
+  .status{position:absolute;right:14px;top:12px;z-index:2;padding:.35rem .85rem;border-radius:99px;font-size:.8rem;font-weight:700;background:#1f2b4a;transition:.3s}
+  .status.ok{background:#14532d;color:#86efac}.status.bad{background:#7f1d1d;color:#fca5a5}.status.warn{background:#78350f;color:#fcd34d}
+  .pip{position:absolute;right:12px;bottom:12px;width:30%;aspect-ratio:4/3;border:2px solid var(--acc);border-radius:10px;pointer-events:none;box-shadow:0 0 20px #38bdf866;z-index:2}
+  .pip span{position:absolute;left:8px;top:6px;font-size:.65rem;letter-spacing:.1em;color:#fff;text-shadow:0 0 4px #000}
+  .pip span::before{content:"● ";color:#f33;animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:.2}}
+  .btns{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
+  button{background:#ffffff0c;color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:.55rem .95rem;font-size:.9rem;cursor:pointer;transition:.2s;font-family:inherit}
+  button:hover{border-color:var(--acc);background:#38bdf822}
+  .steps{display:flex;flex-direction:column;gap:.3rem;font-size:.88rem}
+  .steps div{padding:.35rem .7rem;border-radius:8px;background:#ffffff08;border:1px solid var(--line);color:var(--dim);transition:.25s}
+  .steps div.on{color:#fff;border-color:var(--acc);background:#38bdf822}
+  .steps div.fail{border-color:var(--bad);background:#ef444433;color:#fff}
+  .meter{height:12px;border-radius:6px;background:#ffffff0c;border:1px solid var(--line);position:relative;margin:.45rem 0}
+  .meter i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--acc);width:0;transition:width .5s}
+  .meter b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--warn);left:45%}
+  .chat{display:flex;flex-direction:column;gap:.4rem;max-height:190px;overflow:auto;font-size:.85rem}
+  .chat div{background:#17233f;border-radius:10px 10px 10px 2px;padding:.4rem .7rem;color:var(--txt);animation:pop .3s}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}}
+  .flow{display:flex;align-items:stretch;gap:.5rem;flex-wrap:wrap;justify-content:center}
+  .flow .node{flex:1;min-width:120px;text-align:center}
+  .flow .arr{align-self:center;color:var(--acc);font-size:1.5rem;animation:nudge 1.4s infinite}
+  @keyframes nudge{50%{transform:translateX(5px)}}
+  pre{background:#04070f;border:1px solid var(--line);border-radius:12px;padding:1rem;font-family:Consolas,monospace;font-size:.76rem;color:#a5f3fc;overflow:auto;line-height:1.45}
+  pre .c{color:#64748b}
+  .bar{display:flex;align-items:center;gap:.6rem;margin:.3rem 0;font-size:.88rem}
+  .bar span{width:68px;color:var(--txt)}.bar .meter{flex:1;margin:0}.bar em{width:56px;font-style:normal;color:var(--dim)}
+  .num{display:flex;gap:.7rem;align-items:flex-start;margin-bottom:.55rem}
+  .num b{flex:0 0 28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--vio));display:grid;place-items:center;font-size:.8rem;color:#04101c}
+  .num div{font-size:.9rem;color:var(--dim);line-height:1.4}.num div strong{color:var(--txt)}
+  .tl{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin-bottom:.9rem}
+  .tl .w{text-align:center;font-size:.72rem;color:var(--dim);letter-spacing:.1em}
+  .tl .bar2{grid-column:span 2;padding:.5rem .7rem;border-radius:10px;font-size:.85rem;color:#04101c;font-weight:600}
+  .legend{display:flex;flex-direction:column;gap:.3rem;font-size:.85rem;color:var(--dim)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+  .nav{position:fixed;bottom:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:10;color:var(--dim);font-size:.78rem;background:linear-gradient(transparent,#060914)}
+  .prog{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--acc),var(--vio));z-index:11;transition:.4s;box-shadow:0 0 12px var(--acc)}
+  .nav button{padding:.3rem .8rem}
+  svg text{fill:#93a1c4;font-size:11px;font-family:inherit}
+  @media(max-width:900px){.row{flex-direction:column}.g3,.g4{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="bg"><i></i><i></i><i></i></div>
+<div class="prog" id="prog"></div>
+
+<!-- 1. Титул -->
+<section class="slide">
+  <div class="row" style="align-items:center">
+    <div class="f1">
+      <div class="tag">IoT · КОМПЬЮТЕРДИК КӨРҮҮ · 3D ПРОЕКТ</div>
+      <h1>Акылдуу коопсуздук системасы: эшик жүз менен ачылат</h1>
+      <p class="sub">Камера → Raspberry Pi → жүздү таануу → реле → кулпу + Telegram'га билдирүү</p>
+      <div class="chips"><span class="chip">🌐 Интернетсиз иштейт</span><span class="chip">⚡ &lt; 2 секунд</span><span class="chip">💲 ≈ 105 $</span><span class="chip">🛡 Фотого алданбайт</span></div>
+      <p style="margin-top:1.4rem">Лаборатория 502 · 2026</p>
+    </div>
+    <div class="f1"><div class="stage" data-scene="title" style="height:64vh"></div></div>
+  </div>
+</section>
+
+<!-- 2. Эмне үчүн -->
+<section class="slide">
+  <div class="tag">ЭМНЕ ҮЧҮН КЕРЕК</div>
+  <h2>Ачкычтар жоголот, карталар башка адамга берилет</h2>
+  <p class="lead">Кымбат жабдуулар турган лабораторияга ондогон адам кирет. Азыр ким жана качан киргенин билүү мүмкүн эмес. Ачкычты көчүрүүгө, картаны досуна берүүгө, PIN-кодду карап алууга болот. Жүз болсо башка адамга берилбейт.</p>
+  <div class="row">
+    <div class="f2">
+      <table>
+        <tr><th>КИРҮҮ ЫКМАСЫ</th><th>ЖОГОЛУШУ / БЕРИЛИШИ</th><th>КОНТАКТСЫЗ</th><th>«КИМ КИРДИ» ЖУРНАЛЫ</th><th>БААСЫ</th></tr>
+        <tr><td>🔑 Ачкыч</td><td>ооба</td><td>жок</td><td>жок</td><td>төмөн</td></tr>
+        <tr><td>💳 RFID-карта</td><td>ооба</td><td>ооба</td><td>карта, адам эмес</td><td>төмөн</td></tr>
+        <tr><td>🔢 PIN-код</td><td>карап алса болот</td><td>жок</td><td>жок</td><td>төмөн</td></tr>
+        <tr><td>☝️ Манжа изи</td><td>жок</td><td>жок</td><td>ооба</td><td>орто</td></tr>
+        <tr class="me"><td>🙂 Жүз (биздин проект)</td><td>жок</td><td>ооба</td><td>ооба + сүрөт</td><td>≈ 105 $</td></tr>
+      </table>
+    </div>
+    <div class="f1 grid">
+      <div class="card"><h3>🙌 Ыңгайлуу</h3><p>Колуңда кутуча же ноутбук болсо да, эшик өзү ачылат.</p></div>
+      <div class="card"><h3>📋 Ачык-айкын</h3><p>Кирүү журналы, бейтааныш адамдын сүрөтү, администраторго билдирме.</p></div>
+      <div class="card"><h3>🎓 Окуу баалуулугу</h3><p>Бир проектте IoT, компьютердик көрүү, тармак жана коопсуздук.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Максат -->
+<section class="slide">
+  <div class="tag">ЭМНЕ ЖАСАЙБЫЗ</div>
+  <h2>Максат жана ийгиликтин критерийлери</h2>
+  <p class="lead">Кулпу катталган адамдар үчүн ачылат, бейтааныштар жана телефондогу сүрөт үчүн ачылбайт.</p>
+  <div class="grid g4" style="margin-bottom:1rem">
+    <div class="card"><div class="big">&lt; 2 сек</div><p>жакындаганынан ачылганга чейин</p></div>
+    <div class="card"><div class="big">&lt; 5 %</div><p>өзүбүздүкүн жаңылыш четке кагуу (FRR)</p></div>
+    <div class="card"><div class="big">0 / 200</div><p>бейтааныш кире алган аракеттер (FAR)</p></div>
+    <div class="card"><div class="big">≥ 95 %</div><p>фото жана видео алдамчылыгы токтотулат</p></div>
+  </div>
+  <div class="row">
+    <div class="card f1"><h3>⚙️ Функциялар</h3><ul>
+      <li>Кыймыл сенсору (PIR) адам жакындаганда камераны ойготот</li>
+      <li>Жүздү таануу Raspberry Pi'де болот, интернет керек эмес</li>
+      <li>Жандуулукту текшерүү (көз ирмөө) фотодон коргойт</li>
+      <li>Реле соленоиддик кулпуну 3 секундага ачат</li>
+      <li>Геркон эшиктин жабылганын текшерет</li>
+      <li>Telegram: журнал, бейтааныштын сүрөтү, алыстан ачуу</li>
+      <li>Веб-панель: жүздөрдү каттоо жана өчүрүү</li></ul></div>
+    <div class="card f1"><h3>📏 Өлчөнүүчү критерийлер</h3>
+      <table>
+        <tr><td>Жакындоодон ачылганга чейинки убакыт</td><td>&lt; 2 сек</td></tr>
+        <tr><td>Өзүбүздүкүн четке кагуу (FRR)</td><td>&lt; 5 %</td></tr>
+        <tr><td>Бейтааныш эшикти ачты (FAR)</td><td>200дөн 0</td></tr>
+        <tr><td>Экрандагы фото жана видео токтотулду</td><td>≥ 95 %</td></tr>
+        <tr><td>Telegram билдирмеси</td><td>&lt; 3 сек</td></tr>
+        <tr><td>Интернетсиз иштөө</td><td>ооба</td></tr>
+      </table></div>
+  </div>
+</section>
+
+<!-- 4. 3D демо -->
+<section class="slide">
+  <div class="tag">3D МОДЕЛЬ · СЫЧКАН МЕНЕН ЭЛЕК, ЖОЛУ МЕНЕН МАСШТАБ</div>
+  <h2>Система кантип иштейт</h2>
+  <div class="row">
+    <div class="f2">
+      <div class="stage" data-scene="demo3d">
+        <div class="hud">3D · ЭШИК + КУЛПУ · ТОЛУК МОДЕЛЬ</div>
+        <div class="status" id="status">Күтүүдө</div>
+        <div class="pip"><span>КАМЕРА cam0 · ТҮЗ ЭФИР</span></div>
+      </div>
+      <div class="btns">
+        <button onclick="run('owner')">🙂 Өзүбүздүкү</button>
+        <button onclick="run('stranger')">👤 Бейтааныш</button>
+        <button onclick="run('photo')">📱 Телефондогу фото</button>
+        <button onclick="toggleSpin()" id="spinBtn">⏸ Айлануу</button>
+        <button onclick="auto()" id="autoBtn">▶ Авто-сценарийлер</button>
+      </div>
+    </div>
+    <div class="f1 grid">
+      <div class="card"><h3>🙂 1. Өзүбүздүкү</h3><p>Жүз базадагы вектор менен дал келет, көз ирмейт, реле ачылат, эшик ачылат.</p></div>
+      <div class="card"><h3>👤 2. Бейтааныш</h3><p>Расстояние 0.45 чегинен чоң. Кызыл жарык, кирүү жок, сүрөт Telegram'га кетет.</p></div>
+      <div class="card"><h3>📱 3. Алдамчылык</h3><p>Жүз тааныларын, бирок көз ирмебейт. Фото экенин аныктайт.</p></div>
+      <div class="card"><h3>🎯 Оң бурчтагы кадр</h3><p>Бул кулпудагы камеранын көз карашы: жүздүн контуру жана 68 белги чекиттери.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Симуляция -->
+<section class="slide">
+  <div class="tag">ЖАНДУУ ДЕМО (СИМУЛЯЦИЯ)</div>
+  <h2>Таануу конвейери: 7 кадам</h2>
+  <p class="lead">Сценарийди 3D моделде ишке киргизиңиз, ал эми бул жерде ар бир кадам, жүздөрдүн ортосундагы аралык жана Telegram-боттун билдирмеси көрүнөт.</p>
+  <div class="row">
+    <div class="card f1">
+      <h3>Кадамдар</h3>
+      <div class="steps" id="steps">
+        <div>1 · PIR: кыймыл бар</div><div>2 · Жүздү табуу</div><div>3 · Негизги чекиттер</div>
+        <div>4 · 128 саннан вектор</div><div>5 · Базадагылар менен салыштыруу</div><div>6 · Жандуулукту текшерүү</div><div>7 · Реле → кулпу</div>
+      </div>
+      <p style="margin-top:.7rem;font-size:.85rem">Эң жакынына чейинки аралык (чек 0.45)</p>
+      <div class="meter"><i id="dist"></i><b></b></div>
+      <p id="distTxt" style="font-size:.85rem">—</p>
+    </div>
+    <div class="card f1">
+      <h3>🚪 Lab502 Door Bot</h3>
+      <div class="chat" id="chat"><div>👋 Бот иштеп жатат, lab502 кулпусу онлайн</div></div>
+      <div class="btns"><button onclick="go(3);run('owner')">Өзүбүздүкү</button><button onclick="go(3);run('stranger')">Бейтааныш</button><button onclick="go(3);run('photo')">Фото</button></div>
+    </div>
+    <div class="card f1">
+      <h3>Базадагы жүздөр менен аралык</h3>
+      <div class="bar"><span>Айгерим</span><div class="meter"><i style="width:31%;background:var(--ok)"></i><b></b></div><em>0.31 ✓</em></div>
+      <div class="bar"><span>Тимур</span><div class="meter"><i style="width:58%"></i><b></b></div><em>0.58</em></div>
+      <div class="bar"><span>Данияр</span><div class="meter"><i style="width:66%"></i><b></b></div><em>0.66</em></div>
+      <div class="bar"><span>Алия</span><div class="meter"><i style="width:72%"></i><b></b></div><em>0.72</em></div>
+      <p style="font-size:.85rem;margin-top:.6rem">Аралык канчалык аз болсо, жүздөр ошончолук окшош. Чектен (0.45) кичине болсо, бул бир эле адам.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Архитектура -->
+<section class="slide">
+  <div class="tag">КАНТИП ТҮЗҮЛГӨН</div>
+  <h2>Системанын архитектурасы</h2>
+  <p class="lead">Эшикти ачуу чечими эшиктин жанында кабыл алынат. Сервер журнал, билдирме жана башкаруу үчүн гана керек.</p>
+  <div class="tag" style="color:var(--ok)">ЭШИКТИН ЖАНЫНДА · ОФЛАЙН ИШТЕЙТ</div>
+  <div class="flow">
+    <div class="card node"><div class="ic">📷</div><h3>Камера + PIR</h3><p>Camera Module 3 · HC-SR501</p></div><div class="arr">→</div>
+    <div class="card node"><div class="ic">🧠</div><h3>Raspberry Pi 4</h3><p>OpenCV · face_recognition</p></div><div class="arr">→</div>
+    <div class="card node"><div class="ic">⚡</div><h3>Реле</h3><p>оптопара · 5 В → 12 В</p></div><div class="arr">→</div>
+    <div class="card node"><div class="ic">🔒</div><h3>Кулпу</h3><p>соленоид + геркон</p></div>
+  </div>
+  <div class="tag" style="margin-top:1.2rem;color:var(--vio)">СЕРВЕР · ЖУРНАЛ ЖАНА БИЛДИРМЕЛЕР</div>
+  <div class="flow">
+    <div class="card node"><div class="ic">📡</div><h3>Mosquitto</h3><p>MQTT · TLS 8883</p></div><div class="arr">→</div>
+    <div class="card node"><div class="ic">🖥</div><h3>FastAPI + SQLite</h3><p>журнал · веб-панель</p></div><div class="arr">→</div>
+    <div class="card node"><div class="ic">✈️</div><h3>Telegram-бот</h3><p>билдирме · «Ачуу»</p></div>
+  </div>
+</section>
+
+<!-- 7. Жүздү таануу 3D -->
+<section class="slide">
+  <div class="tag">КОМПЬЮТЕРДИК КӨРҮҮ · 3D</div>
+  <h2>Машина жүздү кантип таанийт</h2>
+  <div class="row">
+    <div class="f2"><div class="stage" data-scene="face"><div class="hud">СОЛДА: ЖҮЗ + БЕЛГИЛЕР · ОҢДО: 128 САНДЫК ВЕКТОР</div></div></div>
+    <div class="f1">
+      <p style="margin-bottom:.8rem">Фотолор салыштырылбайт, «жүздүн изи» салыштырылат: 128 сандан турган вектор.</p>
+      <div class="num"><b>1</b><div><strong>Табуу.</strong> HOG кадрда жүздүн жайгашкан жерин табат.</div></div>
+      <div class="num"><b>2</b><div><strong>Чекиттер.</strong> Көз, ээк, мурун, ооздун 68 чекити.</div></div>
+      <div class="num"><b>3</b><div><strong>Түздөө.</strong> Жүз 150×150 өлчөмүнө келтирилет.</div></div>
+      <div class="num"><b>4</b><div><strong>Нейрондук тармак (ResNet).</strong> 128 сан чыгарат.</div></div>
+      <div class="num"><b>5</b><div><strong>Салыштыруу.</strong> Базадагы вектор менен аралык, чек 0.45.</div></div>
+      <p style="font-size:.85rem">Катталууда 3–5 сүрөттөн орточо вектор гана сакталат, сүрөттөр сакталбайт.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Темир 3D -->
+<section class="slide">
+  <div class="tag">КОМПОНЕНТТЕР · 3D</div>
+  <h2>Темир жабдуулар: бардыгы бир жерде</h2>
+  <div class="row">
+    <div class="f2"><div class="stage" data-scene="hardware"><div class="hud">АЙЛАНТЫҢЫЗ · БЕЛГИЛЕР ЖАНА СИГНАЛ ЖОЛДОРУ</div></div></div>
+    <div class="f1 grid g2" style="align-content:start">
+      <div class="card"><h3>🧠 Raspberry Pi 4</h3><p>Мээ: таануу жана GPIO. 4 ядро, 2–4 ГБ.</p></div>
+      <div class="card"><h3>📷 Camera Module 3</h3><p>12 Мп, автофокус · CSI · ≈ 25 $</p></div>
+      <div class="card"><h3>🔒 Соленоид кулпу</h3><p>12 В · 0.6 А, ток берилгенде ригель тартылат.</p></div>
+      <div class="card"><h3>⚡ Реле модулу</h3><p>Pi 12 В'ту оптопара аркылуу башкарат.</p></div>
+      <div class="card"><h3>👁 PIR HC-SR501</h3><p>7 м чейин кыймылды сезет, камераны ойготот.</p></div>
+      <div class="card"><h3>🧲 Геркон</h3><p>Эшик жабыкпы? 30 сек ачык болсо, эскертет.</p></div>
+      <div class="card"><h3>🔔 Зуммер + LED</h3><p>Жашыл: уруксат. Кызыл жана үн: ичине киргизбейт.</p></div>
+      <div class="card"><h3>🔌 Кубат булагы</h3><p>12 В 2 А жана 5 В 3 А DC-DC.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Туташтыруу -->
+<section class="slide">
+  <div class="tag">МОНТАЖ</div>
+  <h2>Туташтыруу схемасы</h2>
+  <div class="row">
+    <div class="card f1">
+      <h3>GPIO таблицасы</h3>
+      <table>
+        <tr><th>ЖАБДУУ</th><th>PI</th></tr>
+        <tr><td>Реле IN</td><td>GPIO17 (pin 11)</td></tr>
+        <tr><td>Реле VCC / GND</td><td>5V (pin 4) / GND (pin 9)</td></tr>
+        <tr><td>PIR OUT</td><td>GPIO4 (pin 7)</td></tr>
+        <tr><td>Геркон</td><td>GPIO27 (pin 13) + көтөргүч</td></tr>
+        <tr><td>Зуммер</td><td>GPIO22</td></tr>
+        <tr><td>LED жашыл / кызыл</td><td>GPIO23 / 24 (330 Ом)</td></tr>
+        <tr><td>Камера</td><td>CSI-шлейф</td></tr>
+      </table>
+    </div>
+    <div class="f1">
+      <div class="card" style="margin-bottom:.8rem"><h3>Кубаттоо жолу</h3>
+        <div class="flow" style="margin-top:.5rem">
+          <div class="card node" style="padding:.5rem">🔌 БП 12 В</div><div class="arr">→</div>
+          <div class="card node" style="padding:.5rem">⚡ Реле COM/NO</div><div class="arr">→</div>
+          <div class="card node" style="padding:.5rem">🔒 Кулпу</div>
+        </div>
+        <p style="margin-top:.6rem;font-size:.85rem">DC-DC 5 В Pi, камераны жана PIR'ди кубаттайт.</p>
+      </div>
+      <div class="card" style="margin-bottom:.8rem"><h3>⚡ Гальваникалык ажыратуу</h3><p>Реле оптопара менен 12 В жана Pi'ди бөлөт. Кулпунун катушкасына параллель 1N4007 диоду өчүрүүдөгү чоң чыңалууну басат.</p></div>
+      <div class="card"><h3>🔥 Өрт коопсуздугу</h3><p>Ичинен эшик ар дайым механикалык туткадан ачылат, ал тургай кубат жок болсо да. Бул милдеттүү талап.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Код -->
+<section class="slide">
+  <div class="tag">RASPBERRY PI'ДЕГИ ПРОГРАММА</div>
+  <h2>Таануу коду (Python)</h2>
+  <div class="row">
+    <pre class="f2"><span class="c"># реле, сенсор жана жүздөр базасы</span>
+lock = OutputDevice(17)
+pir  = MotionSensor(4)
+db   = np.load("faces.npz")      <span class="c"># names[], enc[N,128]</span>
+THRESHOLD = 0.45
+
+def check_face():
+    frame = capture_rgb(cam)
+    boxes = face_locations(frame, model="hog")
+    for enc in face_encodings(frame, boxes):
+        d = face_distance(db["enc"], enc)
+        i = int(np.argmin(d))
+        if d[i] &lt; THRESHOLD and is_live(cam):   <span class="c"># көз ирмөө</span>
+            return db["names"][i], float(d[i])
+    return None, None
+
+while True:
+    pir.wait_for_motion()
+    name, dist = check_face()
+    publish("lab502/door/event", name, dist)
+    if name:
+        lock.on(); time.sleep(3); lock.off()</pre>
+    <div class="f1 grid">
+      <div class="card"><h3>👁 Жандуулукту текшерүү</h3><p><code>is_live()</code> 1–2 секунд кадр алып, EAR (көздүн ачыктыгы) эсептейт. Фото ирмебейт, ошондуктан EAR түшпөйт жана текшерүү өтпөйт.</p></div>
+      <div class="card"><h3>⚡ Pi 4'төгү ылдамдык</h3><p>Кадр 320×240 өлчөмүнө кичирейтилип, HOG менен табылат. Бир таанууга болжол менен 0.5–1 сек.</p></div>
+      <div class="card"><h3>📝 Каттоо</h3><p><code>enroll.py</code> 5 сүрөт тартат, орточо векторду эсептеп faces.npz'ге жазат. Сүрөттөр сакталбайт.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. MQTT -->
+<section class="slide">
+  <div class="tag">БАЙЛАНЫШ</div>
+  <h2>Окуялар, MQTT жана Telegram-бот</h2>
+  <div class="row">
+    <div class="card f1">
+      <h3>MQTT топиктери</h3>
+      <table>
+        <tr><td>lab502/door/event</td><td>open / deny / spoof</td></tr>
+        <tr><td>lab502/door/state</td><td>ачык / жабык (геркон)</td></tr>
+        <tr><td>lab502/door/cmd</td><td>алыстан ачуу (сервер гана)</td></tr>
+        <tr><td>lab502/door/status</td><td>online / offline (LWT)</td></tr>
+      </table>
+      <pre style="margin-top:.8rem">23:44:52 lab502/door/event
+{"type":"open","who":"Айгерим","dist":0.31}</pre>
+      <p style="margin-top:.6rem;font-size:.85rem">MQTT TLS (8883-порт), логин жана ACL менен иштейт: кулпу окуяларды гана жарыялай алат жана өз буйруктарын гана окуйт.</p>
+    </div>
+    <div class="card f1">
+      <h3>✈️ Telegram-бот</h3>
+      <div class="chat" style="max-height:none">
+        <div>🔓 09:12 Кирди: Айгерим<br>окшоштук 0.69 · жандуулук ✓</div>
+        <div>🚫 13:47 Эшик жанында бейтааныш жүз<br>[ 🔓 Ачуу ] [ 🚫 Эске албоо ]</div>
+        <div>⚠️ 15:03 Алдамчылык аракети: жүз телефондун экранында</div>
+      </div>
+      <h3 style="margin-top:.8rem">Бот эмне кыла алат</h3>
+      <ul><li>кирүү журналы жана <code>/log</code> (бүгүнкү киришүүлөр)</li><li>бейтааныштардын сүрөттөрү</li><li>«Ачуу» баскычы (ак тизмедеги админдер гана, буйрук 30 сек жарайт)</li><li>«Эшик 30 сек ачык» эскертүүсү</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Коопсуздук -->
+<section class="slide">
+  <div class="tag">ЭҢ МААНИЛҮҮСҮ</div>
+  <h2>Коопсуздук жана алдамчылыктан коргоо</h2>
+  <div class="grid g3">
+    <div class="card"><h3>📱 Фото жана видео</h3><ul><li>Көз ирмөөнү текшерүү (EAR)</li><li>Башты кокус бурууну суроо</li><li>Кийинки кадам: NoIR ИК-камера, ИК-сүрөттө телефон экраны караңгы</li></ul></div>
+    <div class="card"><h3>🔥 Өрт коопсуздугу</h3><ul><li>Ичинен механикалык тутка</li><li>Чыгуу баскычы</li><li>«Нормалдуу жабык» кулпу, бирок чыгуу ар дайым бар</li></ul></div>
+    <div class="card"><h3>🔑 Камдык кирүү</h3><ul><li>Кадимки ачкыч сакталат</li><li>PIN же RFID — экинчи жол (милдеттүү эмес)</li><li>Админдин алыстан ачуусу</li></ul></div>
+    <div class="card"><h3>🛡 Тармак</h3><ul><li>TLS, логин, ACL менен MQTT</li><li>Чечим Pi'де, тармаксыз да иштейт</li><li>Бот ак тизмедеги chat_id'ге гана жооп берет</li></ul></div>
+    <div class="card"><h3>👤 Жеке маалыматтар</h3><ul><li>Катышуучулардын жазуу жүзүндөгү макулдугу</li><li>Фото эмес, векторлор сакталат</li><li>Биринчи сурамда өчүрүү</li><li>Бейтааныштардын сүрөттөрү 30 күн</li></ul></div>
+    <div class="card"><h3>📋 Аудит</h3><ul><li>Ар бир окуя SQLite журналында</li><li>Ким, качан, аралык, жандуулук</li><li>Telegram'га жума сайын отчет</li></ul></div>
+  </div>
+</section>
+
+<!-- 13. Тестирование -->
+<section class="slide">
+  <div class="tag">КАНТИП ТЕКШЕРЕБИЗ</div>
+  <h2>Тестирлөө жана чекти тандоо</h2>
+  <div class="row">
+    <div class="card f1">
+      <h3>Сыноо планы</h3>
+      <table>
+        <tr><td>Базадагы катышуучулар</td><td>10</td></tr>
+        <tr><td>«Өзүбүздүн» аракеттер</td><td>10 × 20 = 200</td></tr>
+        <tr><td>«Бейтааныш» аракеттер</td><td>200</td></tr>
+        <tr><td>Фото / видео чабуулдары</td><td>40 / 20</td></tr>
+        <tr><td>Жарык</td><td>күн · кеч · контржарык</td></tr>
+        <tr><td>Тоскоолдуктар</td><td>көз айнек · маска · кепка</td></tr>
+      </table>
+      <p style="margin-top:.7rem;font-size:.85rem">Натыйжа: 0.35–0.60 чектери үчүн FAR/FRR таблицасы жана тандалган акыркы чек.</p>
+    </div>
+    <div class="card f1">
+      <h3>FAR жана FRR чекке көз карандылыгы</h3>
+      <svg id="chart" viewBox="0 0 560 270" width="100%"></svg>
+      <p style="font-size:.85rem">Чек канчалык жогору болсо, бейтааныштарды көбүрөөк киргизебиз (FAR). Канчалык төмөн болсо, өзүбүздүкүн көбүрөөк киргизбейбиз (FRR). Баланс издейбиз.<br><em>Иллюстрациялык модель. Чыныгы ийри сызыктар тест натыйжасынан түзүлөт.</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- 14. План -->
+<section class="slide">
+  <div class="tag">ЖӨНГӨ САЛУУ</div>
+  <h2>Жумуш планы жана ролдор: 5 жума, 4 катышуучу</h2>
+  <div class="tl">
+    <div class="w">1-ЖУМА</div><div class="w">2-ЖУМА</div><div class="w">3-ЖУМА</div><div class="w">4-ЖУМА</div><div class="w">5-ЖУМА</div>
+    <div class="bar2" style="grid-column:1/3;background:#38bdf8">🔧 Темир жана кулпу</div><div style="grid-column:3/6"></div>
+    <div style="grid-column:1/2"></div><div class="bar2" style="grid-column:2/4;background:#a78bfa">🧠 Таануу, жандуулук</div><div style="grid-column:4/6"></div>
+    <div style="grid-column:1/3"></div><div class="bar2" style="grid-column:3/5;background:#34d399">🖥 Сервер жана бот</div><div style="grid-column:5/6"></div>
+    <div style="grid-column:1/4"></div><div class="bar2" style="grid-column:4/6;background:#fbbf24">📦 Корпус жана тесттер</div>
+  </div>
+  <div class="grid g4">
+    <div class="card"><h3>🔧 1-катышуучу</h3><p>Электрика: реле, 12 В / 5 В кубат, кулпу, сенсорлор.</p></div>
+    <div class="card"><h3>🧠 2-катышуучу</h3><p>Компьютердик көрүү: таануу, жандуулук, ылдамдык.</p></div>
+    <div class="card"><h3>🖥 3-катышуучу</h3><p>Mosquitto, FastAPI, SQLite, Telegram-бот, веб-панель.</p></div>
+    <div class="card"><h3>📦 4-катышуучу</h3><p>Корпус (3D-басып чыгаруу), тест-план, документтер, презентация.</p></div>
+  </div>
+</section>
+
+<!-- 15. Бюджет -->
+<section class="slide">
+  <div class="tag">РЕСУРСТАР</div>
+  <h2>Бюджет жана тобокелдиктер</h2>
+  <div class="row">
+    <div class="card f1">
+      <h3>Бюджет (болжолдуу)</h3>
+      <table>
+        <tr><td>Raspberry Pi 4 (2 ГБ)</td><td>≈ 45 $</td></tr>
+        <tr><td>Camera Module 3</td><td>≈ 25 $</td></tr>
+        <tr><td>12 В соленоид кулпу</td><td>≈ 8 $</td></tr>
+        <tr><td>Реле, PIR, геркон, LED, зуммер</td><td>≈ 7 $</td></tr>
+        <tr><td>12 В БП + 5 В 3 А DC-DC</td><td>≈ 10 $</td></tr>
+        <tr><td>microSD, зымдар, корпус</td><td>≈ 10 $</td></tr>
+        <tr class="me"><td>Жыйынтыгы</td><td>≈ 105 $</td></tr>
+      </table>
+      <p style="margin-top:.5rem;font-size:.82rem">Баалар болжолдуу, сатуучудан текшериңиз.</p>
+    </div>
+    <div class="card f1">
+      <h3>Тобокелдиктер жана чаралар</h3>
+      <table>
+        <tr><td>Фото же видео менен алдоо</td><td>Жандуулук, ИК-камера, катуу чек</td></tr>
+        <tr><td>Начар жарык</td><td>ИК-жарыктандыруу, гистограмма теңдөө</td></tr>
+        <tr><td>Электр жок</td><td>Механикалык чыгуу, ачкыч, UPS</td></tr>
+        <tr><td>Тармак жок</td><td>Чечим Pi'де, окуялар кезеги</td></tr>
+        <tr><td>Биометрия агып кетүүсү</td><td>Векторлор гана, дискти шифрлөө</td></tr>
+        <tr><td>Өзүбүздүкүн киргизбейт</td><td>Каттоодо 5 сүрөт, камдык жол</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 16. Жыйынтык -->
+<section class="slide">
+  <div class="row" style="align-items:center">
+    <div class="f1">
+      <div class="tag">ЖЫЙЫНТЫК</div>
+      <h1>Эмне алабыз</h1>
+      <ul style="margin-top:1rem;font-size:1.05rem">
+        <li style="font-size:1.05rem">✅ Кулпу жүз менен 2 секундадан аз убакытта ачылат</li>
+        <li style="font-size:1.05rem">✅ Жандуулукту текшерүү фотодон коргойт</li>
+        <li style="font-size:1.05rem">✅ Кирүү журналы жана бейтааныштардын сүрөттөрү Telegram'да</li>
+        <li style="font-size:1.05rem">✅ Интернетсиз иштейт, баасы ≈ 105 $</li>
+      </ul>
+      <h3 style="margin-top:1.2rem">Андан ары</h3>
+      <p>ИК-камера жана тереңдик камерасы · бир нече эшик · кирүү графиги · катышууну эсепке алуу системасы менен интеграция</p>
+      <h1 style="font-size:2.4rem;margin-top:1.4rem">Суроолор?</h1>
+      <p style="font-size:1.2rem;color:#fff">Көңүл бургандарыңыз үчүн рахмат!</p>
+    </div>
+    <div class="f1"><div class="stage" data-scene="title2" style="height:62vh"></div></div>
+  </div>
+</section>
+
+<div class="nav">
+  <span>←/→ барактоо · F — толук экран · 1/2/3 — демодогу сценарийлер</span>
+  <span><button onclick="go(cur-1)">←</button> <span id="cnt">1 / 16</span> <button onclick="go(cur+1)">→</button></span>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const M=(c,o={})=>new THREE.MeshStandardMaterial({color:c,roughness:.6,metalness:.1,...o});
+function box(w,h,d,mat,x,y,z,p){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;p.add(m);return m}
+function cyl(r,h,mat,x,y,z,p,rot){const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,24),mat);m.position.set(x,y,z);if(rot)m.rotation.set(...rot);m.castShadow=true;p.add(m);return m}
+function addLights(scene){
+  scene.add(new THREE.HemisphereLight(0x9bbcff,0x101020,.75));
+  const sun=new THREE.DirectionalLight(0xffffff,1.1);sun.position.set(3,6,4);sun.castShadow=true;
+  sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-6});scene.add(sun);
+  const p=new THREE.PointLight(0x38bdf8,.9,9);p.position.set(1.2,2,2);scene.add(p);
+}
+function makeLabel(text,color='#e6f3ff',w=512,scale=1){
+  const c=document.createElement('canvas');c.width=w;c.height=128;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));
+  s.userData={c,color,w};s.scale.set(w/512*1.6*scale,.4*scale,1);setLabel(s,text,color);return s}
+function setLabel(s,text,color){
+  const {c,w}=s.userData,g=c.getContext('2d');g.clearRect(0,0,w,128);
+  g.font='bold 46px Segoe UI, sans-serif';const tw=g.measureText(text).width+44;
+  g.fillStyle='#0a1226dd';g.strokeStyle=color||s.userData.color;g.lineWidth=4;
+  g.beginPath();g.roundRect((w-tw)/2,26,tw,76,22);g.fill();g.stroke();
+  g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';g.fillText(text,w/2,66);
+  s.material.map.needsUpdate=true}
+
+/* ---------- Viewer ---------- */
+const viewers=[];
+function makeViewer(stage,build){
+  const renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;
+  stage.prepend(renderer.domElement);
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0x050810);scene.fog=new THREE.Fog(0x050810,10,26);
+  const camera=new THREE.PerspectiveCamera(45,1,.1,60);
+  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;
+  const v={stage,renderer,scene,camera,controls,slide:stage.closest('.slide'),w:0,h:0};
+  Object.assign(v,build(v)||{});viewers.push(v);return v}
+
+/* ---------- Адамга окшош манекен ---------- */
+const FACE_PTS=(()=>{const p=[];
+  for(let i=0;i<9;i++){const a=(-80+i*20)*Math.PI/180;p.push([Math.sin(a)*.1,-.03-Math.cos(a)*.085])}
+  for(const s of[-1,1]){for(let i=0;i<5;i++)p.push([s*(.02+i*.018),.058+Math.sin(i/4*Math.PI)*.012]);
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2;p.push([s*.045+Math.cos(a)*.022,.022+Math.sin(a)*.011])}}
+  for(let i=0;i<4;i++)p.push([0,.04-i*.018]);for(let i=0;i<5;i++)p.push([(i-2)*.014,-.04-(i%2)*.004]);
+  for(let i=0;i<12;i++){const a=i/12*Math.PI*2;p.push([Math.cos(a)*.03,-.066+Math.sin(a)*.012])}
+  return p.map(([x,y])=>{const z=Math.sqrt(Math.max(0,1-(x/.12)**2-(y/.14)**2))*.12*1.05;return new THREE.Vector3(x,y,z+.004)})})();
+
+function makeHead(o){
+  const g=new THREE.Group(),skin=M(o.skin??0xe0b48e,{roughness:.7});
+  const sk=new THREE.Mesh(new THREE.SphereGeometry(.12,40,32),skin);sk.scale.set(1,1.17,1.05);sk.castShadow=true;g.add(sk);
+  const lids=[];
+  for(const s of[-1,1]){
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(.022,16,16),M(0xffffff,{roughness:.2}));eye.scale.z=.55;eye.position.set(s*.045,.022,.108);g.add(eye);
+    const pup=new THREE.Mesh(new THREE.SphereGeometry(.011,12,12),M(o.eye??0x2a1a10));pup.position.set(s*.045,.022,.116);pup.scale.z=.5;g.add(pup);
+    const lid=new THREE.Mesh(new THREE.SphereGeometry(.028,16,16),skin);lid.scale.set(1,.85,.6);lid.position.set(s*.045,.022,.112);lid.visible=false;g.add(lid);lids.push(lid);
+    box(.04,.007,.01,M(o.hair??0x2b1b12),s*.045,.056,.115,g).rotation.z=s*.12;
+    const ear=new THREE.Mesh(new THREE.SphereGeometry(.026,12,12),skin);ear.scale.set(.5,1,.8);ear.position.set(s*.123,0,0);g.add(ear)}
+  const nose=new THREE.Mesh(new THREE.ConeGeometry(.017,.05,16),skin);nose.rotation.x=Math.PI/2;nose.position.set(0,-.012,.125);g.add(nose);
+  box(.05,.008,.01,M(0x8b3a3a),0,-.066,.112,g);
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(.128,28,16,0,Math.PI*2,0,Math.PI*.52),M(o.hair??0x2b1b12,{roughness:.9}));
+  hair.scale.set(1,1.15,1.08);hair.position.set(0,.02,-.005);hair.rotation.x=-.6;g.add(hair);
+  if(o.hood){const h=new THREE.Mesh(new THREE.SphereGeometry(.145,24,20),M(o.hood));h.scale.set(1.02,1.12,1);h.position.set(0,.01,-.035);g.add(h)}
+  if(o.mask)box(.15,.08,.04,M(0x111118),0,-.055,.108,g);
+  g.userData={lids};return g}
+const setBlink=(h,on)=>h.userData.head.userData.lids.forEach(l=>l.visible=on);
+
+function makeHuman(o){
+  const g=new THREE.Group(),skin=M(o.skin??0xe0b48e,{roughness:.7}),shirt=M(o.shirt),pants=M(o.pants);
+  const legs=[-1,1].map(s=>{const p=new THREE.Group();p.position.set(s*.085,.92,0);
+    const l=new THREE.Mesh(new THREE.CapsuleGeometry(.075,.7,6,12),pants);l.position.y=-.43;l.castShadow=true;p.add(l);
+    box(.14,.07,.27,M(0x15151a),0,-.89,.06,p);g.add(p);return p});
+  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.17,.3,8,16),shirt);torso.scale.z=.65;torso.position.y=1.2;torso.castShadow=true;g.add(torso);
+  for(const s of[-1,1]){const sh=new THREE.Mesh(new THREE.SphereGeometry(.07,12,12),shirt);sh.position.set(s*.21,1.43,0);g.add(sh)}
+  const arms=[-1,1].map(s=>{const p=new THREE.Group();p.position.set(s*.25,1.44,0);
+    const a=new THREE.Mesh(new THREE.CapsuleGeometry(.05,.5,6,12),shirt);a.position.y=-.31;a.castShadow=true;p.add(a);
+    const hd=new THREE.Mesh(new THREE.SphereGeometry(.045,12,12),skin);hd.position.y=-.64;p.add(hd);
+    p.rotation.z=s*.07;g.add(p);return p});
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.05,.055,.12,16),skin);neck.position.y=1.56;g.add(neck);
+  const head=makeHead(o);head.position.y=1.68;g.add(head);
+  // таануу эффектилери (бет контуру + 68 чекит)
+  const fx=new THREE.Group();fx.visible=false;head.add(fx);
+  const bm=new THREE.LineBasicMaterial({color:0x22c55e});
+  const pts=[];const C=.15,H=.18,L=.05;
+  for(const[sx,sy]of[[-1,1],[1,1],[1,-1],[-1,-1]]){pts.push(new THREE.Vector3(sx*C,sy*(H-L),.16),new THREE.Vector3(sx*C,sy*H,.16),new THREE.Vector3(sx*C,sy*H,.16),new THREE.Vector3(sx*(C-L),sy*H,.16))}
+  const bb=new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),bm);fx.add(bb);
+  const lp=new THREE.Points(new THREE.BufferGeometry().setFromPoints(FACE_PTS),new THREE.PointsMaterial({color:0x7dd3fc,size:.011}));fx.add(lp);
+  g.userData={legs,arms,head,fx,bm,ph:0,moving:false,raised:false};
+  g.userData.head=head;head.userData.head=head;g.userData.self=g;
+  return g}
+
+/* ---------- Эшик сахнасы ---------- */
+const HOOK0={status(){},steps(){},dist(){},chat(){}};
+function faceTexture(){
+  const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');
+  g.fillStyle='#e0b48e';g.fillRect(0,0,128,128);g.fillStyle='#3a2616';g.fillRect(0,0,128,26);
+  g.fillStyle='#fff';g.fillRect(28,48,26,14);g.fillRect(74,48,26,14);
+  g.fillStyle='#222';g.fillRect(38,50,10,10);g.fillRect(84,50,10,10);
+  g.strokeStyle='#8b3a3a';g.lineWidth=4;g.beginPath();g.arc(64,88,18,.2,Math.PI-.2);g.stroke();
+  return new THREE.CanvasTexture(c)}
+
+function doorScene(v,hooks,opt){
+  const {scene,camera,controls}=v;addLights(scene);
+  camera.position.copy(opt.cam);controls.target.copy(opt.target);controls.maxPolarAngle=Math.PI*.52;controls.minDistance=2;controls.maxDistance=11;
+  const floor=new THREE.Mesh(new THREE.CircleGeometry(7,64),M(0x0d1424,{roughness:.8,metalness:.2}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+  const grid=new THREE.GridHelper(14,28,0x1e3a5f,0x122036);grid.position.y=.01;scene.add(grid);
+  box(6,3.2,.2,M(0x1a2440),.5,1.6,-.1,scene);
+  box(6,.08,.22,M(0x0e1630),.5,.04,-.1,scene);
+  const sign=makeLabel('ЛАБ 502',  '#38bdf8',512,1.2);sign.position.set(0,2.65,.2);scene.add(sign);
+  const fm=M(0x2b3a5e);
+  box(1.2,.1,.3,fm,0,2.15,0,scene);box(.1,2.1,.3,fm,-.6,1.05,0,scene);box(.1,2.1,.3,fm,.6,1.05,0,scene);
+  box(1.1,2.1,.05,M(0x02040a),0,1.05,-.05,scene);
+  const hinge=new THREE.Group();hinge.position.set(-.55,0,.05);scene.add(hinge);
+  box(1.1,2.08,.08,M(0x7c5a3a,{roughness:.5}),.55,1.04,0,hinge);
+  const kn=new THREE.Mesh(new THREE.SphereGeometry(.05,16,16),M(0xcbd5e1,{metalness:.9,roughness:.2}));kn.position.set(.95,1.0,.09);hinge.add(kn);
+  const bolt=box(.12,.05,.05,M(0xcbd5e1,{metalness:.9}),.52,1.0,0,scene);
+  // кулпу панели (камера, PIR, LED)
+  const panel=new THREE.Group();panel.position.set(1.05,1.55,.03);scene.add(panel);
+  box(.34,.6,.1,M(0x0a0f1d,{metalness:.5}),0,0,.05,panel);
+  const lens=cyl(.07,.05,M(0x000000,{metalness:1,roughness:.1}),0,.13,.11,panel,[Math.PI/2,0,0]);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.085,.012,12,32),M(0x38bdf8,{emissive:0x38bdf8}));ring.position.set(0,.13,.115);panel.add(ring);
+  const mkLed=x=>{const l=new THREE.Mesh(new THREE.SphereGeometry(.03,16,16),new THREE.MeshStandardMaterial({color:0x333333}));l.position.set(x,-.1,.11);panel.add(l);return l};
+  const ledG=mkLed(-.08),ledR=mkLed(.08);
+  const pir=new THREE.Mesh(new THREE.SphereGeometry(.05,16,16,0,Math.PI*2,0,Math.PI/2),M(0xf1f5f9,{roughness:.3}));pir.rotation.x=Math.PI/2;pir.position.set(0,-.22,.1);panel.add(pir);
+  const ledL=new THREE.PointLight(0xffffff,0,3);ledL.position.set(0,-.1,.4);panel.add(ledL);
+  const lp1=makeLabel('Камера','#38bdf8',384,.6);lp1.position.set(1.05,2.05,.3);scene.add(lp1);
+  // жерде тургуч белги
+  const spot=new THREE.Mesh(new THREE.RingGeometry(.3,.38,40),new THREE.MeshBasicMaterial({color:0x38bdf8,transparent:true,opacity:.5,side:THREE.DoubleSide}));spot.rotation.x=-Math.PI/2;spot.position.set(1.05,.02,1.4);scene.add(spot);
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(.35,1.25,32,1,true),new THREE.MeshBasicMaterial({color:0x38bdf8,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));
+  cone.rotation.x=-Math.PI/2;cone.position.set(1.05,1.68,.15+.625);scene.add(cone);
+  const scan=new THREE.Mesh(new THREE.PlaneGeometry(.4,.012),new THREE.MeshBasicMaterial({color:0x38bdf8}));scan.visible=false;scene.add(scan);
+  // адамдар
+  const A={
+    owner:makeHuman({shirt:0x2563eb,pants:0x1e293b,hair:0x2b1b12}),
+    stranger:makeHuman({shirt:0x7f1d1d,pants:0x111827,hair:0x6b4a2a,hood:0x3b1010,mask:true,skin:0xd9a577}),
+    photo:makeHuman({shirt:0x4b5563,pants:0x111827,hair:0x1c1c1c,skin:0xcf9c70})};
+  const lbl=makeLabel('','#38bdf8',512,.7);scene.add(lbl);lbl.visible=false;
+  const phone=new THREE.Group();
+  box(.24,.44,.02,M(0x111111),0,0,0,phone);
+  const scr=new THREE.Mesh(new THREE.PlaneGeometry(.21,.38),new THREE.MeshBasicMaterial({map:faceTexture()}));scr.position.z=.012;phone.add(scr);
+  phone.position.set(0,1.62,.42);phone.visible=false;A.photo.add(phone);
+  A.photo.userData.arms.forEach(a=>a.rotation.x=-1.15);
+  for(const k in A){A[k].rotation.y=Math.PI;A[k].position.set(1.05,0,6);A[k].visible=false;scene.add(A[k])}
+
+  let doorT=0,doorA=0,boltT=0,busy=false,scanning=false,cur=null,spin=true,autoOn=false,autoIdx=0,nextBlink=2;
+  const setLed=(g,r)=>{ledG.material.color.setHex(g?0x22ff66:0x333333);ledG.material.emissive.setHex(g?0x22ff66:0);
+    ledR.material.color.setHex(r?0xff3030:0x333333);ledR.material.emissive.setHex(r?0xff3030:0);ledL.intensity=g||r?1.5:0;ledL.color.setHex(g?0x22ff66:0xff3030)};
+  const setCone=(c,o)=>{cone.material.color.setHex(c);cone.material.opacity=o;ring.material.color.setHex(c);ring.material.emissive.setHex(c);spot.material.color.setHex(c)};
+  const fxCol=c=>{if(cur)cur.userData.bm.color.setHex(c)};
+  const tm=()=>new Date().toTimeString().slice(0,5);
+  async function walk(a,from,to,ms){a.userData.moving=true;const t0=performance.now();
+    for(;;){const k=Math.min(1,(performance.now()-t0)/ms);a.position.z=from+(to-from)*k;if(k>=1)break;await sleep(16)}a.userData.moving=false}
+  async function away(a){a.rotation.y=0;lbl.visible=false;await walk(a,a.position.z,6,1500);a.rotation.y=Math.PI;a.visible=false;a.userData.fx.visible=false}
+  async function run(kind){
+    if(busy)return;busy=true;spin=false;controls.autoRotate=false;
+    const a=A[kind];cur=a;const H=hooks;
+    if(opt.focus){camera.position.copy(opt.focus.cam);controls.target.copy(opt.focus.target)}
+    doorT=0;boltT=0;setLed(0,0);H.dist(0,'');H.steps(0);setCone(0x38bdf8,0);H.status('Кыймыл…','warn');
+    a.position.z=6;a.visible=true;a.userData.fx.visible=false;fxCol(0x22c55e);phone.visible=kind==='photo';
+    H.steps(1);await walk(a,6,1.5,2600);
+    setCone(0x38bdf8,.12);H.status('Сканерлөө…','warn');scanning=true;a.userData.fx.visible=true;fxCol(0x38bdf8);
+    H.steps(2);await sleep(550);H.steps(3);await sleep(550);H.steps(4);await sleep(550);H.steps(5);
+    const d=kind==='owner'?.31:kind==='stranger'?.71:.33;
+    H.dist(d,d<.45?'#22c55e':'#ef4444');lbl.visible=true;
+    setLabel(lbl,d<.45?`d = ${d.toFixed(2)} · Айгерим`:`d = ${d.toFixed(2)} · Бейтааныш`,d<.45?'#22c55e':'#ef4444');await sleep(900);
+    if(kind==='stranger'){
+      scanning=false;H.steps(5,5);fxCol(0xef4444);setCone(0xef4444,.18);setLed(0,1);H.status('ЧЕТКЕ КАГЫЛДЫ','bad');
+      H.chat(`🚫 ${tm()} Эшик жанында бейтааныш жүз (d=0.71)`);H.chat('📷 Сүрөт админге жөнөтүлдү');
+      await sleep(2000);setLed(0,0);await away(a);return end()}
+    H.steps(6);H.status('Жандуулук текшерилүүдө…','warn');
+    for(let i=0;i<5;i++){if(kind==='owner')setBlink(a,i===1||i===3);await sleep(420)}
+    setBlink(a,false);scanning=false;
+    if(kind==='photo'){
+      H.steps(6,6);fxCol(0xf59e0b);setCone(0xf59e0b,.2);setLed(0,1);H.status('АЛДАМЧЫЛЫК: көз ирмеди','bad');
+      H.chat(`⚠️ ${tm()} Алдамчылык аракети: жүз телефондун экранында`);
+      await sleep(2200);setLed(0,0);phone.visible=false;await away(a);return end()}
+    H.steps(7);fxCol(0x22c55e);setCone(0x22c55e,.2);setLed(1,0);H.status('КИРҮҮГӨ УРУКСАТ','ok');
+    boltT=1;await sleep(600);doorT=-1.25;
+    H.chat(`🔓 ${tm()} Кирди: Айгерим · окшоштук 0.69 · жандуулук ✓`);
+    await sleep(2800);doorT=0;await sleep(1000);boltT=0;setLed(0,0);await away(a);end()}
+  function end(){scanning=false;setCone(0x38bdf8,0);hooks.status('Күтүүдө');hooks.steps(0);busy=false;spin=true;if(opt.autoLoop||autoOn)setTimeout(()=>{if(!busy&&(opt.autoLoop||autoOn))run(opt.autoLoop?'owner':['owner','stranger','photo'][autoIdx++%3])},1200)}
+  const pipCam=new THREE.PerspectiveCamera(38,4/3,.1,30);pipCam.position.set(1.05,1.68,.2);pipCam.lookAt(1.05,1.6,4);
+  if(opt.autoLoop)setTimeout(()=>run('owner'),1500);
+  return {
+    api:{run,spin:()=>{spin=!spin;return spin},auto:()=>{autoOn=!autoOn;if(autoOn&&!busy)end();return autoOn},stopAuto:()=>{autoOn=false}},
+    update(t,dt){
+      doorA+=(doorT-doorA)*.06;hinge.rotation.y=doorA;bolt.position.x+=((boltT?.35:.52)-bolt.position.x)*.15;
+      controls.autoRotate=spin&&!busy;controls.autoRotateSpeed=opt.rotSpeed||1.2;
+      ring.material.emissiveIntensity=.6+.4*Math.sin(t*4);spot.material.opacity=.35+.2*Math.sin(t*3);
+      for(const k in A){const a=A[k];if(!a.visible)continue;const u=a.userData;
+        if(u.moving){u.ph+=dt*7;const s=Math.sin(u.ph);u.legs[0].rotation.x=s*.55;u.legs[1].rotation.x=-s*.55;
+          if(k!=='photo'){u.arms[0].rotation.x=-s*.45;u.arms[1].rotation.x=s*.45}a.position.y=Math.abs(s)*.03}
+        else{u.legs.forEach(l=>l.rotation.x*=.85);if(k!=='photo')u.arms.forEach(l=>l.rotation.x*=.85);a.position.y*=.8}}
+      if(cur&&cur.visible&&!cur.userData.moving&&cur!==A.photo&&t>nextBlink&&!busy){}
+      if(cur&&cur.visible){lbl.position.set(1.05,2.1,cur.position.z)}
+      if(scanning&&cur){scan.visible=true;scan.position.set(1.05,1.68+Math.sin(t*4)*.15,cur.position.z-.2)}else scan.visible=false;
+      lbl.material.opacity=1},
+    pip:opt.pip?pipCam:null}
+}
+
+/* ---------- Аппараттык сахна ---------- */
+function hardwareScene(v){
+  const {scene,camera,controls}=v;addLights(scene);
+  camera.position.set(0,4.2,7);controls.target.set(.3,0,-.2);controls.autoRotate=true;controls.autoRotateSpeed=.8;controls.maxPolarAngle=Math.PI*.49;
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(5.2,5.4,.12,64),M(0x0b1224,{metalness:.5,roughness:.5}));base.position.y=-.1;base.receiveShadow=true;scene.add(base);
+  const gr=new THREE.GridHelper(10,20,0x1e3a5f,0x122036);gr.position.y=-.03;scene.add(gr);
+  const lab=(t,x,y,z,c)=>{const s=makeLabel(t,c||'#38bdf8',512,.75);s.position.set(x,y,z);scene.add(s)};
+  const gold=M(0xd4af37,{metalness:.9,roughness:.25}),silver=M(0xcfd6e0,{metalness:.85,roughness:.25}),black=M(0x111111,{roughness:.4});
+  // Raspberry Pi
+  const pi=new THREE.Group();scene.add(pi);
+  box(1.7,.05,1.1,M(0x0a7d3b),0,0,0,pi);
+  box(.3,.05,.3,silver,-.2,.05,.05,pi);box(.28,.04,.2,black,.2,.045,.25,pi);box(.16,.04,.16,black,-.5,.04,.3,pi);
+  box(.35,.2,.3,silver,.7,.12,-.3,pi);box(.35,.2,.3,silver,.7,.12,.05,pi);box(.35,.22,.3,silver,.7,.13,.42,pi);
+  box(.12,.06,.18,silver,-.3,.05,.52,pi);box(.12,.06,.18,silver,-.5,.05,.52,pi);
+  for(let i=0;i<20;i++)for(const r of[0,1])box(.025,.1,.025,gold,-.76+i*.08,.07,-.5+r*.06,pi);
+  lab('Raspberry Pi 4',0,.9,.2,'#22c55e');
+  // Камера
+  const cam=new THREE.Group();cam.position.set(-2.9,.1,.5);scene.add(cam);
+  box(.5,.04,.5,M(0x14532d),0,0,0,cam);box(.22,.18,.22,black,0,.11,0,cam);cyl(.1,.08,M(0x000000,{metalness:1,roughness:.1}),0,.22,0,cam);
+  cyl(.12,.03,silver,0,.19,0,cam);box(.18,.01,.4,M(0xea8a1a),.3,.0,.3,cam);
+  lab('Camera Module 3',-2.9,1.0,.5);
+  // PIR
+  const pirG=new THREE.Group();pirG.position.set(-2.5,.1,-1.9);scene.add(pirG);
+  box(.5,.04,.4,M(0x14532d),0,0,0,pirG);cyl(.17,.12,silver,0,.08,0,pirG);
+  const dome=new THREE.Mesh(new THREE.SphereGeometry(.14,24,16,0,Math.PI*2,0,Math.PI/2),M(0xf8fafc,{roughness:.2}));dome.position.y=.14;pirG.add(dome);
+  lab('PIR HC-SR501',-2.5,.9,-1.9);
+  // Геркон
+  const reed=new THREE.Group();reed.position.set(-.3,.1,-2.4);scene.add(reed);
+  box(.5,.06,.18,M(0xe2e8f0),-.35,0,0,reed);box(.5,.06,.18,M(0xdc2626),.35,0,0,reed);cyl(.012,.3,M(0x9ca3af),-.35,.06,0,reed,[0,0,Math.PI/2]);
+  lab('Геркон',-.1,.7,-2.4,'#f59e0b');
+  // Реле
+  const rel=new THREE.Group();rel.position.set(2.9,.1,-1.5);scene.add(rel);
+  box(.9,.04,.55,M(0x1d4ed8),0,0,0,rel);box(.32,.3,.28,M(0x2563eb),-.1,.17,0,rel);
+  for(let i=0;i<3;i++)box(.1,.14,.14,M(0x16a34a),.3,.09,-.18+i*.18,rel);
+  lab('Реле 5В → 12В',2.9,.95,-1.5,'#60a5fa');
+  // Кулпу
+  const lock=new THREE.Group();lock.position.set(3.0,.25,1.0);scene.add(lock);
+  box(.7,.35,.4,M(0x6b7280,{metalness:.8,roughness:.35}),0,0,0,lock);
+  const bolt=cyl(.07,.5,silver,0,0,0,lock,[0,0,Math.PI/2]);bolt.position.x=-.5;
+  lab('Соленоид кулпу 12В',3.0,1.0,1.0,'#f43f5e');
+  // LED + зуммер
+  const led=new THREE.Group();led.position.set(-.6,.1,2.2);scene.add(led);
+  box(.9,.03,.4,M(0x14532d),0,0,0,led);
+  const lg=new THREE.Mesh(new THREE.SphereGeometry(.07,16,16),new THREE.MeshStandardMaterial({color:0x22ff66,emissive:0x22ff66}));lg.position.set(-.3,.08,0);led.add(lg);
+  const lr=new THREE.Mesh(new THREE.SphereGeometry(.07,16,16),new THREE.MeshStandardMaterial({color:0xff3030,emissive:0xff3030}));lr.position.set(-.1,.08,0);led.add(lr);
+  cyl(.12,.1,black,.25,.07,0,led);
+  lab('LED + зуммер',-.6,.8,2.2,'#a78bfa');
+  // зымдар жана сигнал чекиттери
+  const curves=[];
+  const wire=(pts,col)=>{const c=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)));
+    const m=new THREE.Mesh(new THREE.TubeGeometry(c,50,.015,8),new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:.5}));scene.add(m);
+    const d=new THREE.Mesh(new THREE.SphereGeometry(.05,12,12),new THREE.MeshBasicMaterial({color:col}));scene.add(d);curves.push({c,d,o:Math.random()})};
+  wire([[-.85,.05,.25],[-1.6,.15,.5],[-2.3,.1,.5],[-2.65,.1,.5]],0xea8a1a);
+  wire([[-.5,.12,-.5],[-1.2,.5,-1.2],[-2.0,.4,-1.9],[-2.35,.15,-1.9]],0xfacc15);
+  wire([[-.1,.12,-.5],[-.1,.4,-1.4],[-.3,.2,-2.2]],0x9ca3af);
+  wire([[.3,.12,-.5],[1.2,.6,-1.0],[2.2,.5,-1.4],[2.6,.15,-1.5]],0x22c55e);
+  wire([[3.0,.15,-1.3],[3.5,.5,-.2],[3.2,.4,.7],[3.0,.3,.8]],0xef4444);
+  wire([[-.3,.1,.55],[-.3,.3,1.5],[-.5,.2,2.0]],0xffffff);
+  return {update(t){
+    cam.rotation.y=Math.sin(t*.6)*.3;dome.rotation.y=t;
+    lock.children[1].position.x=-.5+Math.max(0,Math.sin(t*1.2))*.3;
+    for(const k of curves){const u=((t*.35+k.o)%1);k.d.position.copy(k.c.getPoint(u))}
+    lg.material.emissiveIntensity=.6+.4*Math.sin(t*3);lr.material.emissiveIntensity=.6+.4*Math.sin(t*3+2)}}
+}
+
+/* ---------- Жүздү таануу сахнасы ---------- */
+function faceScene(v){
+  const {scene,camera,controls}=v;addLights(scene);scene.fog=null;
+  camera.position.set(.4,.6,7.4);controls.target.set(.6,0,0);controls.maxDistance=12;
+  const head=makeHead({});head.scale.setScalar(6);head.position.set(-2.4,0,0);scene.add(head);
+  const wf=new THREE.Mesh(new THREE.IcosahedronGeometry(.12,3),new THREE.MeshBasicMaterial({color:0x38bdf8,wireframe:true,transparent:true,opacity:.28}));
+  wf.scale.set(1.12,1.3,1.18);head.add(wf);
+  const pts=new THREE.Points(new THREE.BufferGeometry().setFromPoints(FACE_PTS),new THREE.PointsMaterial({color:0xfde047,size:.016}));head.add(pts);
+  const bm=new THREE.LineBasicMaterial({color:0x22c55e});const bp=[];const C=.17,H=.2,L=.05;
+  for(const[sx,sy]of[[-1,1],[1,1],[1,-1],[-1,-1]])bp.push(new THREE.Vector3(sx*C,sy*(H-L),.16),new THREE.Vector3(sx*C,sy*H,.16),new THREE.Vector3(sx*C,sy*H,.16),new THREE.Vector3(sx*(C-L),sy*H,.16));
+  head.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(bp),bm));
+  const scan=new THREE.Mesh(new THREE.PlaneGeometry(.3,.006),new THREE.MeshBasicMaterial({color:0x7dd3fc}));scan.position.z=.16;head.add(scan);
+  const l1=makeLabel('Жүз + 68 чекит','#fde047',512,1);l1.position.set(-2.4,1.5,0);scene.add(l1);
+  // 128 санды вектор: тик тилкелер
+  const N=128,mesh=new THREE.InstancedMesh(new THREE.BoxGeometry(.1,1,.1),new THREE.MeshStandardMaterial({roughness:.4,metalness:.3}),N);
+  const col=new THREE.Color(),dummy=new THREE.Object3D(),grp=new THREE.Group();grp.position.set(1.4,-.6,-.6);grp.add(mesh);scene.add(grp);
+  for(let i=0;i<N;i++){col.setHSL(.52+(i/N)*.28,.8,.55);mesh.setColorAt(i,col)}
+  const l2=makeLabel('Вектор: 128 сан','#a78bfa',512,1);l2.position.set(2.5,1.5,0);scene.add(l2);
+  const l3=makeLabel('[0.12, −0.08, 0.31 …]','#a5f3fc',512,.85);l3.position.set(2.5,1.1,0);scene.add(l3);
+  const arrow=new THREE.Mesh(new THREE.ConeGeometry(.12,.35,16),new THREE.MeshBasicMaterial({color:0x38bdf8}));arrow.rotation.z=-Math.PI/2;arrow.position.set(-.55,0,0);scene.add(arrow);
+  const trail=[];for(let i=0;i<8;i++){const d=new THREE.Mesh(new THREE.SphereGeometry(.04,10,10),new THREE.MeshBasicMaterial({color:0x38bdf8}));scene.add(d);trail.push(d)}
+  const floor=new THREE.GridHelper(14,28,0x1e3a5f,0x122036);floor.position.y=-1.3;scene.add(floor);
+  const rnd=i=>{const s=Math.sin(i*12.9898)*43758.5453;return s-Math.floor(s)};
+  return {update(t){
+    head.rotation.y=Math.sin(t*.6)*.5;scan.position.y=Math.sin(t*2.2)*.15;
+    for(let i=0;i<N;i++){const cx=i%16,cz=Math.floor(i/16);const h=.15+rnd(i)*.9*(.65+.35*Math.sin(t*1.5+i*.4));
+      dummy.position.set(cx*.15,h/2,cz*.15);dummy.scale.set(1,h,1);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix)}
+    mesh.instanceMatrix.needsUpdate=true;
+    trail.forEach((d,i)=>{const u=((t*.5+i/8)%1);d.position.set(-.4+u*1.7,Math.sin(u*Math.PI)*.1,0)});
+    arrow.scale.setScalar(1+.15*Math.sin(t*5))}}
+}
+
+/* ---------- Сахналарды түзүү ---------- */
+const DOOR_CAM={cam:new THREE.Vector3(4.8,2.1,4.6),target:new THREE.Vector3(.7,1.2,1.0)};
+const stages={};document.querySelectorAll('.stage').forEach(s=>stages[s.dataset.scene]=s);
+makeViewer(stages.title,v=>doorScene(v,HOOK0,{cam:new THREE.Vector3(4.6,2.0,5.2),target:new THREE.Vector3(.5,1.2,1.0),autoLoop:true,rotSpeed:.8}));
+makeViewer(stages.title2,v=>doorScene(v,HOOK0,{cam:new THREE.Vector3(-3.5,2.0,5),target:new THREE.Vector3(.5,1.2,.8),autoLoop:true,rotSpeed:1}));
+const demo=makeViewer(stages.demo3d,v=>doorScene(v,{
+  status(t,c=''){const s=document.getElementById('status');s.textContent=t;s.className='status '+c},
+  steps(n,f){[...document.querySelectorAll('#steps div')].forEach((d,i)=>{d.className=i<n?'on':'';if(f&&i===f-1)d.className='fail'})},
+  dist(x,c){document.getElementById('dist').style.width=(x*100)+'%';document.getElementById('dist').style.background=c;document.getElementById('distTxt').textContent=x?'d = '+x.toFixed(2):'—'},
+  chat(m){const c=document.getElementById('chat'),d=document.createElement('div');d.textContent=m;c.appendChild(d);c.scrollTop=c.scrollHeight}
+},{cam:DOOR_CAM.cam,target:DOOR_CAM.target,pip:true,focus:{cam:new THREE.Vector3(4.2,1.9,3.6),target:new THREE.Vector3(.9,1.2,1.2)}}));
+makeViewer(stages.hardware,hardwareScene);
+makeViewer(stages.face,faceScene);
+
+window.run=k=>demo.api.run(k);
+window.toggleSpin=()=>{document.getElementById('spinBtn').textContent=demo.api.spin()?'⏸ Айлануу':'▶ Айлануу'};
+window.auto=()=>{document.getElementById('autoBtn').textContent=demo.api.auto()?'⏹ Токтотуу':'▶ Авто-сценарийлер'};
+
+/* ---------- Render циклы ---------- */
+const clock=new THREE.Clock();let tPrev=0;
+function loop(){
+  requestAnimationFrame(loop);
+  const t=clock.getElapsedTime(),dt=Math.min(.05,t-tPrev);tPrev=t;
+  for(const v of viewers){
+    if(!v.slide.classList.contains('active'))continue;
+    const w=v.stage.clientWidth,h=v.stage.clientHeight;
+    if(w!==v.w||h!==v.h){v.w=w;v.h=h;v.renderer.setSize(w,h,false);v.camera.aspect=w/h;v.camera.updateProjectionMatrix()}
+    v.update?.(t,dt);v.controls.update();
+    const r=v.renderer;r.setScissorTest(false);r.setViewport(0,0,w,h);r.render(v.scene,v.camera);
+    if(v.pip){const pw=Math.round(w*.3),ph=Math.round(pw*.75);
+      r.setScissorTest(true);r.setViewport(w-pw-12,12,pw,ph);r.setScissor(w-pw-12,12,pw,ph);r.render(v.scene,v.pip);r.setScissorTest(false)}
+  }
+}
+
+/* ---------- Слайддар ---------- */
+const slides=[...document.querySelectorAll('.slide')];let cur=0;
+function go(n){
+  cur=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,i)=>{s.classList.toggle('active',i===cur);s.classList.toggle('prev',i<cur)});
+  document.getElementById('cnt').textContent=`${cur+1} / ${slides.length}`;
+  document.getElementById('prog').style.width=((cur+1)/slides.length*100)+'%';
+  if(cur!==3){demo.api.stopAuto();document.getElementById('autoBtn').textContent='▶ Авто-сценарийлер'}
+}
+window.go=go;Object.defineProperty(window,'cur',{get:()=>cur});
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' ')go(cur+1);
+  if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1);
+  if(e.key==='f'||e.key==='F')document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
+  if(cur===3||cur===4){const k={1:'owner',2:'stranger',3:'photo'}[e.key];if(k)demo.api.run(k)}
+});
+
+/* ---------- FAR/FRR графиги ---------- */
+(function(){
+  const svg=document.getElementById('chart'),X=th=>50+(th-.35)/.25*480,Y=p=>230-p*14;
+  const frr=th=>14*Math.exp(-(th-.35)*14),far=th=>.15*Math.exp((th-.35)*17);
+  const path=f=>{let d='';for(let i=0;i<=50;i++){const th=.35+i*.005;d+=(i?'L':'M')+X(th).toFixed(1)+' '+Y(Math.min(f(th),15)).toFixed(1)}return d};
+  let s='<line x1="50" y1="230" x2="540" y2="230" stroke="#1f2b4a"/><line x1="50" y1="20" x2="50" y2="230" stroke="#1f2b4a"/>';
+  for(let i=0;i<=5;i++){const th=.35+i*.05;s+=`<text x="${X(th)-10}" y="250">${th.toFixed(2)}</text><line x1="${X(th)}" y1="230" x2="${X(th)}" y2="20" stroke="#ffffff0a"/>`}
+  for(let p=0;p<=15;p+=5)s+=`<text x="18" y="${Y(p)+4}">${p}%</text>`;
+  s+=`<path d="${path(frr)}" fill="none" stroke="#f59e0b" stroke-width="3"/><path d="${path(far)}" fill="none" stroke="#ef4444" stroke-width="3"/>`;
+  s+=`<line x1="${X(.45)}" y1="20" x2="${X(.45)}" y2="230" stroke="#22c55e" stroke-dasharray="5 4" stroke-width="2"/><text x="${X(.45)+6}" y="34" style="fill:#22c55e">чек 0.45</text>`;
+  s+=`<text x="${X(.36)}" y="${Y(13)}" style="fill:#f59e0b">FRR (өзүбүздүкүн четке кагуу)</text><text x="${X(.47)}" y="${Y(9)}" style="fill:#ef4444">FAR (бейтааныш киргизүү)</text>`;
+  svg.innerHTML=s})();
+
+go(0);loop();
+</script>
+</body>
+</html>
